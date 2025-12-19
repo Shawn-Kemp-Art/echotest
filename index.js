@@ -30,18 +30,21 @@ var noise = new perlinNoise3d();
 noise.noiseSeed(seed);
 
 //read in query strings
+var urlParams = new URLSearchParams(window.location.search);
 var qcolor1 = "AllColors";
-if(new URLSearchParams(window.location.search).get('c1')){qcolor1 = new URLSearchParams(window.location.search).get('c1')}; //colors1
+if(urlParams.get('c1')){qcolor1 = urlParams.get('c1')}; //colors1
 var qcolor2 = "None";
-if(new URLSearchParams(window.location.search).get('c2')){qcolor2 = new URLSearchParams(window.location.search).get('c2')}; //colors2
+if(urlParams.get('c2')){qcolor2 = urlParams.get('c2')}; //colors2
 var qcolor3 = "None";
-if(new URLSearchParams(window.location.search).get('c3')){qcolor3 = new URLSearchParams(window.location.search).get('c3')}; //colors3
+if(urlParams.get('c3')){qcolor3 = urlParams.get('c3')}; //colors3
+var customPaletteHex = [];
+if(urlParams.get('colors')){customPaletteHex = urlParams.get('colors').split(',')}; //custom palette
 var qcolors = R.random_int(1,6);
-if(new URLSearchParams(window.location.search).get('c')){qcolors = new URLSearchParams(window.location.search).get('c')}; //number of colors
+if(urlParams.get('c')){qcolors = urlParams.get('c')}; //number of colors
 var qsize = "2";
-if(new URLSearchParams(window.location.search).get('s')){qsize = new URLSearchParams(window.location.search).get('s')}; //size
+if(urlParams.get('s')){qsize = urlParams.get('s')}; //size
 var qcomplexity = R.random_int(1,10);
-if(new URLSearchParams(window.location.search).get('d')){qcomplexity = new URLSearchParams(window.location.search).get('d')}; //size
+if(urlParams.get('d')){qcomplexity = urlParams.get('d')}; //size
 var qcomplexity = qcomplexity*4;
 var qlayers = 12;
 if(new URLSearchParams(window.location.search).get('l')){qlayers = new URLSearchParams(window.location.search).get('l')}; //layers
@@ -56,6 +59,23 @@ var qoriginx = R.random_int(0,1000);
 var qoriginy = R.random_int(0,1000);
 var qmatwidth = R.random_int(50,100);
 var qframecolor = R.random_int(0,3) < 1 ? "Random" : R.random_int(1,3) < 2 ? "White" : "Mocha";
+
+var customPalette = [];
+if (customPaletteHex.length > 0) {
+    customPalette = customPaletteHex
+    .map(hex => {
+        var normalizedHex = hex.trim();
+        if (normalizedHex && normalizedHex[0] !== '#') {
+            normalizedHex = '#' + normalizedHex;
+        }
+        return {"Hex": normalizedHex.toUpperCase(), "Name": normalizedHex.toUpperCase()};
+    })
+    .filter(color => /^#([0-9A-F]{6})$/.test(color.Hex));
+
+    if (customPalette.length > 0) {
+        qcolors = customPalette.length;
+    }
+}
 
 
 //FXparams
@@ -268,16 +288,20 @@ paper.view.viewSize.width = 2400;
 paper.view.viewSize.height = 2400;
 
 
-var colors = []; var palette = []; 
+var colors = []; var palette = [];
 
 //set a allete based theme and number of colors
-//for (c=0; c<numofcolors; c=c+1){palette[c] = this[$fx.getParam('pallete')][R.random_int(0, this[$fx.getParam('pallete')].length-1)]}  
+//for (c=0; c<numofcolors; c=c+1){palette[c] = this[$fx.getParam('pallete')][R.random_int(0, this[$fx.getParam('pallete')].length-1)]}
 //console.log(palette);
 
 // set a pallete based on color schemes
 var newPalette = [];
-newPalette = this[$fx.getParam('colors1')].concat(this[$fx.getParam('colors2')],this[$fx.getParam('colors3')]);
-for (c=0; c<numofcolors; c=c+1){palette[c] = newPalette[R.random_int(0, newPalette.length-1)]}  
+if (customPalette.length > 0) {
+    newPalette = customPalette;
+} else {
+    newPalette = this[$fx.getParam('colors1')].concat(this[$fx.getParam('colors2')],this[$fx.getParam('colors3')]);
+}
+for (c=0; c<numofcolors; c=c+1){palette[c] = newPalette[R.random_int(0, newPalette.length-1)]}
 console.log(newPalette);
 
 //randomly assign colors to layers
